@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QApplication, QVBoxLayout, QGridLayout, \
-    QLineEdit, QPushButton, QLabel, QWidget, QComboBox ,QMainWindow
+    QLineEdit, QPushButton, QLabel, QWidget, QComboBox ,QMainWindow, \
+    QTableWidget
 
 from PySide6.QtGui import QAction
 
@@ -20,6 +21,15 @@ class MainWindow(QMainWindow):
 
         about_action = QAction("About", self)
         help_menu_item.addAction(about_action)
+
+        #Create Table
+        self.table = QTableWidget()
+        self.table.setColumnCount(4)
+        self.table.setHorizontalHeaderLabels(('Id', 'Name', 'Course', 'Mobile'))
+        self.setCentralWidget(self.table)
+
+    def load_data(self):
+        self.table
 
 
 
