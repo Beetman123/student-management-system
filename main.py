@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QApplication, QVBoxLayout, QGridLayout, \
     QLineEdit, QPushButton, QLabel, QWidget, QComboBox, QMainWindow, \
-    QTableWidget, QTableWidgetItem, QDialog, QToolBar, QStatusBar
+    QTableWidget, QTableWidgetItem, QDialog, QToolBar, QStatusBar, QMessageBox
 
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtGui import Qt
@@ -66,11 +66,8 @@ class MainWindow(QMainWindow):
             for child in children_buttons:
                 self.statusbar.removeWidget(child)
 
-
         self.statusbar.addWidget(edit_button)
         self.statusbar.addWidget(delete_button)
-
-
 
     def load_data(self):
         connection = sqlite3.connect("database.db")
@@ -102,11 +99,104 @@ class MainWindow(QMainWindow):
         dialog = DeleteDialog()
         dialog.exec()
 
+
 class EditDialog(QDialog):
-    pass
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Update Student Data")
+        self.setFixedWidth(300)
+        self.setFixedHeight(300)
+
+        layout = QVBoxLayout()
+
+        # Get selected student data
+        row = main_window.table.currentRow()
+        self.student_id = main_window.table.item(row, 0).text()
+        student_name = main_window.table.item(row, 1).text()
+        course_name = main_window.table.item(row, 2).text()
+        mobile = main_window.table.item(row, 3).text()
+
+
+        # name box
+        self.student_name = QLineEdit(student_name)
+        self.student_name.setPlaceholderText("Name")
+        layout.addWidget(self.student_name)
+
+        # Add Combo box of courses
+        self.course_name = QComboBox()
+        courses = ['Biology', 'Math', 'Astronomy', 'Physics']
+        self.course_name.addItems(courses)
+        self.course_name.setCurrentText(course_name)
+        layout.addWidget(self.course_name)
+
+        # add mobile widget
+        self.mobile = QLineEdit(mobile)
+        self.mobile.setPlaceholderText("Mobile")
+        layout.addWidget(self.mobile)
+
+        # Add submit button
+        button = QPushButton("Update")
+        button.clicked.connect(self.update_student)
+        layout.addWidget(button)
+
+        self.setLayout(layout)
+
+    def update_student(self):
+        connection = sqlite3.connect("database.db")
+        cursor = connection.cursor()
+        cursor.execute("UPDATE students SET name = ?, course = ?, mobile = ? WHERE id = ?",
+                       (self.student_name.text(),
+                        self.course_name.itemText(self.course_name.currentIndex()),
+                        self.mobile.text(), self.student_id))
+        connection.commit()
+        cursor.close()
+        connection.close()
+        # Refresh the table
+        main_window.load_data()
+
+
 
 class DeleteDialog(QDialog):
-    pass
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Delete Student Data")
+
+        layout = QGridLayout()
+        confirmation = QLabel("Are you sure you want to delete?")
+        yes = QPushButton("Yes")
+        no = QPushButton("No")
+
+        layout.addWidget(confirmation, 0, 0, 1, 2)
+        layout.addWidget(yes, 1, 0)
+        layout.addWidget(no, 1, 1)
+        self.setLayout(layout)
+
+        yes.clicked.connect(self.delete_student)
+
+    def delete_student(self):
+
+        # Get row and id of student
+        row = main_window.table.currentRow()
+        student_id = main_window.table.item(row, 0).text()
+
+        connection = sqlite3.connect("database.db")
+        cursor = connection.cursor()
+        cursor.execute("DELETE from students WHERE id = ?",
+                       (student_id, ))
+        connection.commit()
+        cursor.close()
+        connection.close()
+        # Refresh the table
+        main_window.load_data()
+
+        self.close()
+
+        confirmation_widget = QMessageBox()
+        confirmation_widget.setWindowTitle("Success")
+        confirmation_widget.setText("The record was deleted successfully!")
+        confirmation_widget.exec()
+
+
 
 class InsertDialog(QDialog):
     def __init__(self):
