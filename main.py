@@ -3,6 +3,7 @@ from PySide6.QtWidgets import QApplication, QVBoxLayout, QGridLayout, \
     QTableWidget, QTableWidgetItem, QDialog
 
 from PySide6.QtGui import QAction
+from PySide6.QtGui import Qt
 
 import sys
 import sqlite3
@@ -13,10 +14,13 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Student Management System")
 
+        self.setFixedWidth(400)
+        self.setFixedHeight(500)
+
         # Menu Bar
         file_menu_item = self.menuBar().addMenu("&File")
         help_menu_item = self.menuBar().addMenu("&Help")
-        search_menu_item = self.menuBar().addMenu("&Edit")
+        edit_menu_item = self.menuBar().addMenu("&Edit")
 
         # Submenu items
         add_student_action = QAction("Add Student", self)
@@ -28,7 +32,7 @@ class MainWindow(QMainWindow):
 
         search_action = QAction("Search", self)
         search_action.triggered.connect(self.search)
-        search_menu_item.addAction(search_action)
+        edit_menu_item.addAction(search_action)
 
         # Create Table
         self.table = QTableWidget()
@@ -104,7 +108,7 @@ class InsertDialog(QDialog):
         cursor.close()
         connection.close()
 
-        main_window.load_data() # reload updated data
+        main_window.load_data()  # reload updated data
 
 
 class SearchDialog(QDialog):
@@ -123,10 +127,28 @@ class SearchDialog(QDialog):
 
         # Add search button
         button = QPushButton("Search")
-        #button.clicked.connect(self.add_student) # add functionality in next video
+        button.clicked.connect(self.search)  # add functionality in next video
         layout.addWidget(button)
 
         self.setLayout(layout)
+
+    def search(self):
+        name = self.student_name.text()
+        connection = sqlite3.connect("database.db")
+        cursor = connection.cursor()
+        result = cursor.execute("SELECT * FROM students WHERE name = ?",
+                                (name,))
+        rows = list(result)
+        print(rows)
+
+        items = main_window.table.findItems(name, Qt.MatchFlag.MatchFixedString)
+
+        for item in items:
+            print(item)
+            main_window.table.item(item.row(), 1).setSelected(True)
+
+        cursor.close()
+        connection.close()
 
 
 app = QApplication(sys.argv)
