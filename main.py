@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QApplication, QVBoxLayout, QGridLayout, \
     QLineEdit, QPushButton, QLabel, QWidget, QComboBox, QMainWindow, \
-    QTableWidget, QTableWidgetItem, QDialog, QToolBar
+    QTableWidget, QTableWidgetItem, QDialog, QToolBar, QStatusBar
 
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtGui import Qt
@@ -47,6 +47,29 @@ class MainWindow(QMainWindow):
         toolbar.addAction(add_student_action)
         toolbar.addAction(search_action)
 
+        # Create status bar and add status bar elements
+        self.statusbar = QStatusBar()
+        self.setStatusBar(self.statusbar)
+
+        # Detect table click
+        self.table.cellClicked.connect(self.cell_clicked)
+
+    def cell_clicked(self):
+        edit_button = QPushButton("Edit Record")
+        edit_button.clicked.connect(self.edit)
+
+        delete_button = QPushButton("Delete Record")
+        delete_button.clicked.connect(self.delete)
+
+        children_buttons = self.findChildren(QPushButton)
+        if children_buttons:
+            for child in children_buttons:
+                self.statusbar.removeWidget(child)
+
+
+        self.statusbar.addWidget(edit_button)
+        self.statusbar.addWidget(delete_button)
+
 
 
     def load_data(self):
@@ -71,6 +94,19 @@ class MainWindow(QMainWindow):
         dialog = SearchDialog()
         dialog.exec()
 
+    def edit(self):
+        dialog = EditDialog()
+        dialog.exec()
+
+    def delete(self):
+        dialog = DeleteDialog()
+        dialog.exec()
+
+class EditDialog(QDialog):
+    pass
+
+class DeleteDialog(QDialog):
+    pass
 
 class InsertDialog(QDialog):
     def __init__(self):
